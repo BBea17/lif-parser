@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life is Feudal - Analizador de Daños</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Applying medieval styling with simple gray/brown aesthetic */
+        body {
+            font-family: 'Crimson Text', serif;
+            background: #2a2520;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .medieval-title {
+            font-family: 'Cinzel', serif;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #3a3530;
+            border: 2px solid #5a5248;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a4238;
+            color: #c9b896;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 2px solid #5a5248;
+        }
+
+        .header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2em;
+            margin: 0 0 10px 0;
+            color: #d4af37;
+        }
+
+        .header p {
+            font-size: 1em;
+            color: #c9b896;
+            margin: 0;
+        }
+
+        .upload-section {
+            padding: 30px;
+            text-align: center;
+            background: #3a3530;
+            border-bottom: 2px solid #5a5248;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #5a5248;
+            color: #c9b896;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #6a6250;
+            font-family: 'Cinzel', serif;
+        }
+
+        .file-input-label:hover {
+            background: #6a6250;
+            color: #d4af37;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #9a8876;
+        }
+
+        .progress-bar {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            height: 24px;
+            background: #2a2520;
+            border: 2px solid #5a5248;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #8b1a1a;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c9b896;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .stats-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #3a3530;
+        }
+
+        .stat-card {
+            background: #2a2520;
+            padding: 20px;
+            border: 2px solid #5a5248;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #d4af37;
+            margin: 8px 0;
+            font-family: 'Cinzel', serif;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #9a8876;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: none;
+            background: #3a3530;
+            padding: 0 20px;
+            border-bottom: 2px solid #5a5248;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: #2a2520;
+            border: 2px solid #5a5248;
+            border-bottom: none;
+            color: #9a8876;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Cinzel', serif;
+        }
+
+        .tab-button:hover {
+            background: #4a4238;
+            color: #c9b896;
+        }
+
+        .tab-button.active {
+            background: #4a4238;
+            color: #d4af37;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: #3a3530;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 2px solid #5a5248;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #2a2520;
+        }
+
+        thead {
+            background: #4a4238;
+            color: #d4af37;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85em;
+            border-bottom: 2px solid #5a5248;
+            font-family: 'Cinzel', serif;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #3a3530;
+            color: #c9b896;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #3a3530;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-input, .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #5a5248;
+            background: #2a2520;
+            color: #c9b896;
+            font-size: 0.95em;
+            transition: border-color 0.2s ease;
+            font-family: 'Crimson Text', serif;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+
+        .filter-input::placeholder {
+            color: #6a6250;
+        }
+
+        .export-button {
+            padding: 8px 20px;
+            background: #5a5248;
+            color: #c9b896;
+            border: 2px solid #6a6250;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Cinzel', serif;
+        }
+
+        .export-button:hover {
+            background: #6a6250;
+            color: #d4af37;
+        }
+
+        .kill-badge {
+            background: #8b1a1a;
+            color: #c9b896;
+            padding: 4px 10px;
+            font-size: 0.85em;
+            font-weight: 600;
+            border: 1px solid #6a1515;
+        }
+
+        .target-stats {
+            margin-top: 20px;
+        }
+
+        .target-item {
+            background: #2a2520;
+            padding: 15px;
+            margin-bottom: 8px;
+            border: 2px solid #5a5248;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .target-item:hover {
+            background: #3a3530;
+            border-color: #6a6250;
+        }
+
+        .target-name {
+            font-weight: 600;
+            font-size: 1.05em;
+            color: #d4af37;
+            font-family: 'Cinzel', serif;
+        }
+
+        .target-stats-inline {
+            display: flex;
+            gap: 15px;
+            color: #9a8876;
+            font-size: 0.9em;
+        }
+
+        .damage-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            font-weight: 600;
+            border: 1px solid;
+            font-family: 'Cinzel', serif;
+        }
+
+        .damage-type-piercing { 
+            background: #5a4420; 
+            color: #d4af37;
+            border-color: #6a5430;
+        }
+        
+        .damage-type-slashing { 
+            background: #5a2020; 
+            color: #c98876;
+            border-color: #6a3030;
+        }
+        
+        .damage-type-crushing { 
+            background: #3a3a3a; 
+            color: #9a9a9a;
+            border-color: #4a4a4a;
+        }
+        
+        .damage-type-Unknown { 
+            background: #2a2520; 
+            color: #7a7568;
+            border-color: #4a4238;
+        }
+
+        .body-parts-section {
+            display: none;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            background: #2a2520;
+            border: 2px solid #5a5248;
+        }
+
+        .body-parts-header {
+            padding: 12px 20px;
+            background: #3a3530;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s ease;
+            border-bottom: 2px solid #5a5248;
+        }
+
+        .body-parts-header:hover {
+            background: #4a4238;
+        }
+
+        .body-parts-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1em;
+            color: #d4af37;
+            margin: 0;
+        }
+
+        .body-parts-toggle {
+            font-size: 1.2em;
+            color: #c9b896;
+            transition: transform 0.3s ease;
+        }
+
+        .body-parts-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .body-parts-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .body-parts-content.expanded {
+            max-height: 800px;
+            padding: 15px;
+        }
+
+        .body-parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .body-part-card {
+            background: #3a3530;
+            padding: 10px;
+            border: 2px solid #5a5248;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .body-part-card:hover {
+            background: #4a4238;
+            border-color: #6a6250;
+        }
+
+        .body-part-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .body-part-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8em;
+            color: #c9b896;
+            margin-bottom: 4px;
+            text-transform: capitalize;
+        }
+
+        .body-part-hits {
+            font-size: 0.75em;
+            color: #9a8876;
+            margin-bottom: 2px;
+        }
+
+        .body-part-percentage {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #d4af37;
+            font-family: 'Cinzel', serif;
+        }
+
+        .body-part-damage {
+            font-size: 0.9em;
+            color: #c98876;
+            margin-top: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-section {
+                flex-direction: column;
+            }
+            
+            .filter-input, .filter-select, .export-button {
+                width: 100%;
+            }
+
+            .target-item {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .target-stats-inline {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .body-parts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Life is Feudal - Analizador de Daños</h1>
+            <p>Sube tu archivo de log para analizar tus estadísticas de combate</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".log,.txt">
+                <label for="fileInput" class="file-input-label">
+                    Seleccionar Archivo de Log
+                </label>
+            </div>
+            <div class="file-name" id="fileName">Ningún archivo seleccionado</div>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Golpes Dados</div>
+                <div class="stat-value" id="totalHits">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daño Infligido</div>
+                <div class="stat-value" id="totalDamage">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daño Recibido</div>
+                <div class="stat-value" id="totalDamageReceived" style="color: #c98876;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daño Promedio</div>
+                <div class="stat-value" id="avgDamage">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Kills</div>
+                <div class="stat-value" id="totalKills">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daño Máximo</div>
+                <div class="stat-value" id="maxDamage">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Objetivos Atacados</div>
+                <div class="stat-value" id="uniqueTargets">0</div>
+            </div>
+        </div>
+
+        <div class="tabs" id="tabs">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('damages')">Daño Infligido</button>
+                <button class="tab-button" onclick="switchTab('received')">Daño Recibido</button>
+                <button class="tab-button" onclick="switchTab('targets')">Por Objetivo</button>
+                <button class="tab-button" onclick="switchTab('kills')">Kills</button>
+            </div>
+        </div>
+
+        <div class="tab-content active" id="damagesTab">
+            <div class="body-parts-section" id="bodyPartsSectionInflicted">
+                <div class="body-parts-header" onclick="toggleBodyParts('inflicted')">
+                    <div class="body-parts-title">📊 Daño Infligido por Zona del Cuerpo</div>
+                    <div class="body-parts-toggle" id="toggleInflicted">▼</div>
+                </div>
+                <div class="body-parts-content" id="bodyPartsContentInflicted">
+                    <div class="body-parts-grid" id="bodyPartsInflicted"></div>
+                </div>
+            </div>
+            <div class="filter-section">
+                <input type="text" class="filter-input" id="filterTarget" placeholder="Filtrar por objetivo...">
+                <select class="filter-select" id="filterDamageType">
+                    <option value="">Todos los tipos de daño</option>
+                    <option value="piercing">Piercing</option>
+                    <option value="slashing">Slashing</option>
+                    <option value="crushing">Crushing</option>
+                    <option value="Unknown">Unknown</option>
+                </select>
+                <button class="export-button" onclick="exportToCSV()">Exportar CSV</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="damagesTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Objetivo</th>
+                            <th>Parte del Cuerpo</th>
+                            <th>Daño</th>
+                            <th>Tipo</th>
+                            <th>Speed Bonus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="damagesBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="receivedTab">
+            <div class="body-parts-section" id="bodyPartsSectionReceived">
+                <div class="body-parts-header" onclick="toggleBodyParts('received')">
+                    <div class="body-parts-title">📊 Daño Recibido por Zona del Cuerpo</div>
+                    <div class="body-parts-toggle" id="toggleReceived">▼</div>
+                </div>
+                <div class="body-parts-content" id="bodyPartsContentReceived">
+                    <div class="body-parts-grid" id="bodyPartsReceived"></div>
+                </div>
+            </div>
+            <div class="filter-section">
+                <input type="text" class="filter-input" id="filterAttacker" placeholder="Filtrar por atacante...">
+                <select class="filter-select" id="filterReceivedDamageType">
+                    <option value="">Todos los tipos de daño</option>
+                    <option value="piercing">Piercing</option>
+                    <option value="slashing">Slashing</option>
+                    <option value="crushing">Crushing</option>
+                    <option value="Unknown">Unknown</option>
+                </select>
+                <button class="export-button" onclick="exportReceivedToCSV()">Exportar CSV</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="receivedTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Atacante</th>
+                            <th>Parte del Cuerpo</th>
+                            <th>Daño</th>
+                            <th>Tipo</th>
+                            <th>Speed Bonus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receivedBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="targetsTab">
+            <div class="target-stats" id="targetStats"></div>
+        </div>
+
+        <div class="tab-content" id="killsTab">
+            <div class="table-wrapper">
+                <table id="killsTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Objetivo Eliminado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="killsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allDamages = [];
+        let allDamagesReceived = [];
+        let allKills = [];
+        let filteredDamages = [];
+        let filteredDamagesReceived = [];
+
+        // Mapeo de iconos para cada parte del cuerpo
+        const bodyPartIcons = {
+            'head': '🧠',
+            'neck': '👔',
+            'chest': '🛡️',
+            'abdomen': '💪',
+            'left arm': '💪',
+            'right arm': '💪',
+            'left hand': '✋',
+            'right hand': '✋',
+            'left leg': '🦵',
+            'right leg': '🦵',
+            'left foot': '👟',
+            'right foot': '👟',
+            'back': '🎒',
+            'unknown': '❓'
+        };
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        document.getElementById('filterTarget').addEventListener('input', applyFilters);
+        document.getElementById('filterDamageType').addEventListener('change', applyFilters);
+        document.getElementById('filterAttacker').addEventListener('input', applyReceivedFilters);
+        document.getElementById('filterReceivedDamageType').addEventListener('change', applyReceivedFilters);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('progressBar').style.display = 'block';
+            
+            const reader = new FileReader();
+            
+            reader.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentLoaded = Math.round((e.loaded / e.total) * 100);
+                    updateProgress(percentLoaded);
+                }
+            };
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseLogFile(content);
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function updateProgress(percent) {
+            const fill = document.getElementById('progressFill');
+            fill.style.width = percent + '%';
+            fill.textContent = percent + '%';
+        }
+
+        function parseLogFile(content) {
+            allDamages = [];
+            allDamagesReceived = [];
+            allKills = [];
+            
+            const lines = content.split('\n');
+            const totalLines = lines.length;
+            
+            const detailedPattern = /INFO ([\d\-: .]+) .* System Chat Message: You have hit <spush><color:C65F5F>([^<]+)<spop> in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            const simplePattern = /INFO ([\d\-: .]+) .* System Chat Message: You have hit target for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            
+            const receivedDetailedPattern = /INFO ([\d\-: .]+) .* System Chat Message: <spush><color:C65F5F>([^<]+)<spop> has hit you in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            const receivedSimplePattern = /INFO ([\d\-: .]+) .* System Chat Message: You've been hit for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            
+            const killPattern = /ECHO [\d\-: .]+ ([\d:.]+) .* You have killed (.+)/;
+            
+            lines.forEach((line, index) => {
+                if (index % 1000 === 0) {
+                    const percent = Math.round((index / totalLines) * 100);
+                    updateProgress(percent);
+                }
+                
+                let match = line.match(detailedPattern);
+                if (match) {
+                    allDamages.push({
+                        timestamp: match[1].trim(),
+                        target: match[2],
+                        bodyPart: match[3],
+                        damage: parseFloat(match[4]),
+                        damageType: match[5],
+                        speedBonus: parseInt(match[6])
+                    });
+                } else {
+                    match = line.match(simplePattern);
+                    if (match) {
+                        allDamages.push({
+                            timestamp: match[1].trim(),
+                            target: 'Unknown',
+                            bodyPart: 'Unknown',
+                            damage: parseFloat(match[2]),
+                            damageType: 'Unknown',
+                            speedBonus: parseInt(match[3])
+                        });
+                    }
+                }
+                
+                match = line.match(receivedDetailedPattern);
+                if (match) {
+                    allDamagesReceived.push({
+                        timestamp: match[1].trim(),
+                        attacker: match[2],
+                        bodyPart: match[3],
+                        damage: parseFloat(match[4]),
+                        damageType: match[5],
+                        speedBonus: parseInt(match[6])
+                    });
+                } else {
+                    match = line.match(receivedSimplePattern);
+                    if (match) {
+                        allDamagesReceived.push({
+                            timestamp: match[1].trim(),
+                            attacker: 'Unknown',
+                            bodyPart: 'Unknown',
+                            damage: parseFloat(match[2]),
+                            damageType: 'Unknown',
+                            speedBonus: parseInt(match[3])
+                        });
+                    }
+                }
+                
+                match = line.match(killPattern);
+                if (match) {
+                    allKills.push({
+                        timestamp: match[1].trim(),
+                        target: match[2].trim()
+                    });
+                }
+            });
+            
+            updateProgress(100);
+            setTimeout(() => {
+                document.getElementById('progressBar').style.display = 'none';
+                displayResults();
+            }, 500);
+        }
+
+        function displayResults() {
+            document.getElementById('statsGrid').style.display = 'grid';
+            document.getElementById('tabs').style.display = 'block';
+            
+            const totalDamage = allDamages.reduce((sum, d) => sum + d.damage, 0);
+            const avgDamage = allDamages.length > 0 ? totalDamage / allDamages.length : 0;
+            const maxDamage = allDamages.length > 0 ? Math.max(...allDamages.map(d => d.damage)) : 0;
+            const uniqueTargets = new Set(allDamages.map(d => d.target)).size;
+            
+            const totalDamageReceived = allDamagesReceived.reduce((sum, d) => sum + d.damage, 0);
+            
+            document.getElementById('totalHits').textContent = allDamages.length.toLocaleString();
+            document.getElementById('totalDamage').textContent = totalDamage.toFixed(2);
+            document.getElementById('totalDamageReceived').textContent = totalDamageReceived.toFixed(2);
+            document.getElementById('avgDamage').textContent = avgDamage.toFixed(2);
+            document.getElementById('totalKills').textContent = allKills.length;
+            document.getElementById('maxDamage').textContent = maxDamage.toFixed(2);
+            document.getElementById('uniqueTargets').textContent = uniqueTargets;
+            
+            applyFilters();
+            applyReceivedFilters();
+            displayKills();
+            displayTargetStats();
+            displayBodyPartsStats();
+        }
+
+        function getBodyPartIcon(bodyPart) {
+            const part = bodyPart.toLowerCase();
+            return bodyPartIcons[part] || bodyPartIcons['unknown'];
+        }
+
+        function toggleBodyParts(section) {
+            const content = document.getElementById(`bodyPartsContent${section.charAt(0).toUpperCase() + section.slice(1)}`);
+            const toggle = document.getElementById(`toggle${section.charAt(0).toUpperCase() + section.slice(1)}`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.classList.add('collapsed');
+            } else {
+                content.classList.add('expanded');
+                toggle.classList.remove('collapsed');
+            }
+        }
+
+        function displayBodyPartsStats() {
+            // Mostrar las secciones de estadísticas por parte del cuerpo
+            document.querySelectorAll('.body-parts-section').forEach(section => {
+                section.style.display = 'block';
+            });
+
+            // Calcular estadísticas de daño infligido por parte del cuerpo
+            const bodyPartsInflicted = {};
+            let totalHitsInflicted = 0;
+            let totalDamageInflicted = 0;
+
+            allDamages.forEach(damage => {
+                const part = damage.bodyPart;
+                if (!bodyPartsInflicted[part]) {
+                    bodyPartsInflicted[part] = {
+                        hits: 0,
+                        damage: 0
+                    };
+                }
+                bodyPartsInflicted[part].hits++;
+                bodyPartsInflicted[part].damage += damage.damage;
+                totalHitsInflicted++;
+                totalDamageInflicted += damage.damage;
+            });
+
+            // Calcular estadísticas de daño recibido por parte del cuerpo
+            const bodyPartsReceived = {};
+            let totalHitsReceived = 0;
+            let totalDamageReceived = 0;
+
+            allDamagesReceived.forEach(damage => {
+                const part = damage.bodyPart;
+                if (!bodyPartsReceived[part]) {
+                    bodyPartsReceived[part] = {
+                        hits: 0,
+                        damage: 0
+                    };
+                }
+                bodyPartsReceived[part].hits++;
+                bodyPartsReceived[part].damage += damage.damage;
+                totalHitsReceived++;
+                totalDamageReceived += damage.damage;
+            });
+
+            // Mostrar estadísticas de daño infligido
+            const bodyPartsInflictedDiv = document.getElementById('bodyPartsInflicted');
+            bodyPartsInflictedDiv.innerHTML = '';
+
+            const sortedInflicted = Object.entries(bodyPartsInflicted)
+                .sort((a, b) => b[1].hits - a[1].hits);
+
+            sortedInflicted.forEach(([part, stats]) => {
+                const percentage = ((stats.hits / totalHitsInflicted) * 100).toFixed(1);
+                const avgDamage = (stats.damage / stats.hits).toFixed(1);
+                
+                const card = document.createElement('div');
+                card.className = 'body-part-card';
+                card.innerHTML = `
+                    <div class="body-part-icon">${getBodyPartIcon(part)}</div>
+                    <div class="body-part-name">${part}</div>
+                    <div class="body-part-percentage">${percentage}%</div>
+                    <div class="body-part-hits">${stats.hits} golpes</div>
+                    <div class="body-part-damage">${stats.damage.toFixed(0)} daño</div>
+                    <div class="body-part-hits">Promedio: ${avgDamage}</div>
+                `;
+                bodyPartsInflictedDiv.appendChild(card);
+            });
+
+            // Mostrar estadísticas de daño recibido
+            const bodyPartsReceivedDiv = document.getElementById('bodyPartsReceived');
+            bodyPartsReceivedDiv.innerHTML = '';
+
+            const sortedReceived = Object.entries(bodyPartsReceived)
+                .sort((a, b) => b[1].hits - a[1].hits);
+
+            sortedReceived.forEach(([part, stats]) => {
+                const percentage = ((stats.hits / totalHitsReceived) * 100).toFixed(1);
+                const avgDamage = (stats.damage / stats.hits).toFixed(1);
+                
+                const card = document.createElement('div');
+                card.className = 'body-part-card';
+                card.innerHTML = `
+                    <div class="body-part-icon">${getBodyPartIcon(part)}</div>
+                    <div class="body-part-name">${part}</div>
+                    <div class="body-part-percentage">${percentage}%</div>
+                    <div class="body-part-hits">${stats.hits} golpes</div>
+                    <div class="body-part-damage">${stats.damage.toFixed(0)} daño</div>
+                    <div class="body-part-hits">Promedio: ${avgDamage}</div>
+                `;
+                bodyPartsReceivedDiv.appendChild(card);
+            });
+        }
+
+        function applyFilters() {
+            const targetFilter = document.getElementById('filterTarget').value.toLowerCase();
+            const damageTypeFilter = document.getElementById('filterDamageType').value.toLowerCase();
+            
+            filteredDamages = allDamages.filter(d => {
+                const matchesTarget = !targetFilter || d.target.toLowerCase().includes(targetFilter);
+                const matchesDamageType = !damageTypeFilter || d.damageType.toLowerCase() === damageTypeFilter;
+                return matchesTarget && matchesDamageType;
+            });
+            
+            displayDamages();
+        }
+
+        function displayDamages() {
+            const tbody = document.getElementById('damagesBody');
+            tbody.innerHTML = '';
+            
+            const displayLimit = 1000;
+            const damagesToShow = filteredDamages.slice(0, displayLimit);
+            
+            damagesToShow.forEach(damage => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${damage.timestamp}</td>
+                    <td><strong>${damage.target}</strong></td>
+                    <td>${damage.bodyPart}</td>
+                    <td><strong>${damage.damage.toFixed(2)}</strong></td>
+                    <td><span class="damage-type-badge damage-type-${damage.damageType}">${damage.damageType}</span></td>
+                    <td>${damage.speedBonus}</td>
+                `;
+            });
+            
+            if (filteredDamages.length > displayLimit) {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td colspan="6" style="text-align:center; color:#9a8876; padding:20px;">
+                    Mostrando ${displayLimit} de ${filteredDamages.length} resultados. Usa los filtros para refinar la búsqueda.
+                </td>`;
+            }
+        }
+
+        function applyReceivedFilters() {
+            const attackerFilter = document.getElementById('filterAttacker').value.toLowerCase();
+            const damageTypeFilter = document.getElementById('filterReceivedDamageType').value.toLowerCase();
+            
+            filteredDamagesReceived = allDamagesReceived.filter(d => {
+                const matchesAttacker = !attackerFilter || d.attacker.toLowerCase().includes(attackerFilter);
+                const matchesDamageType = !damageTypeFilter || d.damageType.toLowerCase() === damageTypeFilter;
+                return matchesAttacker && matchesDamageType;
+            });
+            
+            displayDamagesReceived();
+        }
+
+        function displayDamagesReceived() {
+            const tbody = document.getElementById('receivedBody');
+            tbody.innerHTML = '';
+            
+            const displayLimit = 1000;
+            const damagesToShow = filteredDamagesReceived.slice(0, displayLimit);
+            
+            if (damagesToShow.length === 0) {
+                const row = tbody.insertRow();
+                row.innerHTML = '<td colspan="6" style="text-align:center; padding:30px; color:#9a8876;">No se encontró daño recibido</td>';
+                return;
+            }
+            
+            damagesToShow.forEach(damage => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${damage.timestamp}</td>
+                    <td><strong>${damage.attacker}</strong></td>
+                    <td>${damage.bodyPart}</td>
+                    <td><strong style="color: #c98876;">${damage.damage.toFixed(2)}</strong></td>
+                    <td><span class="damage-type-badge damage-type-${damage.damageType}">${damage.damageType}</span></td>
+                    <td>${damage.speedBonus}</td>
+                `;
+            });
+            
+            if (filteredDamagesReceived.length > displayLimit) {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td colspan="6" style="text-align:center; color:#9a8876; padding:20px;">
+                    Mostrando ${displayLimit} de ${filteredDamagesReceived.length} resultados. Usa los filtros para refinar la búsqueda.
+                </td>`;
+            }
+        }
+
+        function displayKills() {
+            const tbody = document.getElementById('killsBody');
+            tbody.innerHTML = '';
+            
+            if (allKills.length === 0) {
+                const row = tbody.insertRow();
+                row.innerHTML = '<td colspan="2" style="text-align:center; padding:30px; color:#9a8876;">No se encontraron kills</td>';
+                return;
+            }
+            
+            allKills.forEach(kill => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${kill.timestamp}</td>
+                    <td><span class="kill-badge">${kill.target}</span></td>
+                `;
+            });
+        }
+
+        function displayTargetStats() {
+            const targetStatsDiv = document.getElementById('targetStats');
+            targetStatsDiv.innerHTML = '';
+            
+            const targetGroups = {};
+            allDamages.forEach(damage => {
+                if (!targetGroups[damage.target]) {
+                    targetGroups[damage.target] = {
+                        count: 0,
+                        totalDamage: 0,
+                        maxDamage: 0
+                    };
+                }
+                targetGroups[damage.target].count++;
+                targetGroups[damage.target].totalDamage += damage.damage;
+                targetGroups[damage.target].maxDamage = Math.max(targetGroups[damage.target].maxDamage, damage.damage);
+            });
+            
+            const sortedTargets = Object.entries(targetGroups)
+                .sort((a, b) => b[1].totalDamage - a[1].totalDamage);
+            
+            sortedTargets.forEach(([target, stats]) => {
+                const div = document.createElement('div');
+                div.className = 'target-item';
+                
+                const hasKill = allKills.some(k => k.target === target);
+                const killBadge = hasKill ? '<span class="kill-badge">KILL</span>' : '';
+                
+                div.innerHTML = `
+                    <div>
+                        <span class="target-name">${target}</span>
+                        ${killBadge}
+                    </div>
+                    <div class="target-stats-inline">
+                        <span>${stats.count} golpes</span>
+                        <span>${stats.totalDamage.toFixed(2)} daño total</span>
+                        <span>${stats.maxDamage.toFixed(2)} máx</span>
+                    </div>
+                `;
+                
+                targetStatsDiv.appendChild(div);
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function exportToCSV() {
+            let csv = 'Timestamp,Target,Body Part,Damage,Damage Type,Speed Bonus\n';
+            
+            filteredDamages.forEach(damage => {
+                csv += `"${damage.timestamp}","${damage.target}","${damage.bodyPart}",${damage.damage},"${damage.damageType}",${damage.speedBonus}\n`;
+            });
+            
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'damage_log_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportReceivedToCSV() {
+            let csv = 'Timestamp,Attacker,Body Part,Damage,Damage Type,Speed Bonus\n';
+            
+            filteredDamagesReceived.forEach(damage => {
+                csv += `"${damage.timestamp}","${damage.attacker}","${damage.bodyPart}",${damage.damage},"${damage.damageType}",${damage.speedBonus}\n`;
+            });
+            
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'damage_received_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

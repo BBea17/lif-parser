@@ -1,0 +1,9 @@
+import { CombatLogParser } from "@/components/combat-log-parser"
+
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-background">
+      <CombatLogParser />
+    </main>
+  )
+}
