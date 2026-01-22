@@ -352,6 +352,18 @@
             color: #7a7568;
             border-color: #4a4238;
         }
+        
+        .damage-type-chopping { 
+            background: #3d4f3d; 
+            color: #9ac99a;
+            border-color: #5a7a5a;
+        }
+        
+        .damage-type-blunt { 
+            background: #4a4a3d; 
+            color: #c9c99a;
+            border-color: #7a7a5a;
+        }
 
         .body-parts-section {
             display: none;
@@ -559,6 +571,8 @@
                 <input type="text" class="filter-input" id="filterTarget" placeholder="Filtrar por objetivo...">
                 <select class="filter-select" id="filterDamageType">
                     <option value="">Todos los tipos de daño</option>
+                    <option value="chopping">Chopping</option>
+                    <option value="blunt">Blunt</option>
                     <option value="piercing">Piercing</option>
                     <option value="slashing">Slashing</option>
                     <option value="crushing">Crushing</option>
@@ -597,6 +611,8 @@
                 <input type="text" class="filter-input" id="filterAttacker" placeholder="Filtrar por atacante...">
                 <select class="filter-select" id="filterReceivedDamageType">
                     <option value="">Todos los tipos de daño</option>
+                    <option value="chopping">Chopping</option>
+                    <option value="blunt">Blunt</option>
                     <option value="piercing">Piercing</option>
                     <option value="slashing">Slashing</option>
                     <option value="crushing">Crushing</option>
@@ -652,9 +668,12 @@
             'head': '🧠',
             'neck': '👔',
             'chest': '🛡️',
+            'torso': '🛡️',
             'abdomen': '💪',
             'left arm': '💪',
             'right arm': '💪',
+            'left forearm': '💪',
+            'right forearm': '💪',
             'left hand': '✋',
             'right hand': '✋',
             'left leg': '🦵',
@@ -662,6 +681,7 @@
             'left foot': '👟',
             'right foot': '👟',
             'back': '🎒',
+            'shield': '🛡️',
             'unknown': '❓'
         };
 
@@ -709,13 +729,14 @@
             const lines = content.split('\n');
             const totalLines = lines.length;
             
-            const detailedPattern = /INFO ([\d\-: .]+) .* System Chat Message: You have hit <spush><color:C65F5F>([^<]+)<spop> in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
-            const simplePattern = /INFO ([\d\-: .]+) .* System Chat Message: You have hit target for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            // Nuevo formato: ECHO timestamp {} <> [id] CmChatClientBuiltIn::message(@,...)
+            const detailedPattern = /ECHO ([\d\-: .]+) \{\} <> \[\d+\] CmChatClientBuiltIn::message\(@,You have hit <spush><color:C65F5F>([^<]+)<spop> in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            const simplePattern = /ECHO ([\d\-: .]+) \{\} <> \[\d+\] CmChatClientBuiltIn::message\(@,You have hit target for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
             
-            const receivedDetailedPattern = /INFO ([\d\-: .]+) .* System Chat Message: <spush><color:C65F5F>([^<]+)<spop> has hit you in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
-            const receivedSimplePattern = /INFO ([\d\-: .]+) .* System Chat Message: You've been hit for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            const receivedDetailedPattern = /ECHO ([\d\-: .]+) \{\} <> \[\d+\] CmChatClientBuiltIn::message\(@,<spush><color:C65F5F>([^<]+)<spop> has hit you in <spush><color:C65F5F>([^<]+)<spop> for <spush><color:C65F5F>([\d.]+)<spop> of <spush><color:C65F5F>([^<]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
+            const receivedSimplePattern = /ECHO ([\d\-: .]+) \{\} <> \[\d+\] CmChatClientBuiltIn::message\(@,You've been hit for <spush><color:C65F5F>([\d.]+)<spop> damage\. Speed bonus: <spush><color:C65F5F>([\d.]+)<spop>/;
             
-            const killPattern = /ECHO [\d\-: .]+ ([\d:.]+) .* You have killed (.+)/;
+            const killPattern = /ECHO ([\d\-: .]+) \{\} <> \[\d+\] CmChatClientBuiltIn::message\(@,You have killed ([^)]+)\)/;
             
             lines.forEach((line, index) => {
                 if (index % 1000 === 0) {
